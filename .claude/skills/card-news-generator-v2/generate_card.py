@@ -139,30 +139,36 @@ def create_card_news(
     max_text_width = width - (padding * 2)
     
     # Try to load fonts (fallback to default if not available)
-    try:
-        title_font = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc", title_size)
-    except:
-        try:
-            title_font = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSansKR-Bold.ttf", title_size)
-        except:
-            print("Warning: Korean font not found, using default font", file=sys.stderr)
-            title_font = ImageFont.load_default()
-    
-    try:
-        content_font = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", content_size)
-    except:
-        try:
-            content_font = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSansKR-Regular.ttf", content_size)
-        except:
-            content_font = ImageFont.load_default()
-    
-    try:
-        number_font = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc", 60)
-    except:
-        try:
-            number_font = ImageFont.truetype("/usr/share/fonts/truetype/noto/NotoSansKR-Bold.ttf", 60)
-        except:
-            number_font = ImageFont.load_default()
+    import os
+    _home = os.path.expanduser("~")
+    _bold_paths = [
+        os.path.join(_home, "Library/Fonts/NotoSansCJK.ttc"),
+        "/Library/Fonts/NotoSansCJK.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansKR-Bold.ttf",
+    ]
+    _regular_paths = [
+        os.path.join(_home, "Library/Fonts/NotoSansCJK.ttc"),
+        "/Library/Fonts/NotoSansCJK.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansKR-Regular.ttf",
+    ]
+
+    def _load_font(paths, size):
+        for path in paths:
+            try:
+                return ImageFont.truetype(path, size)
+            except:
+                continue
+        return None
+
+    title_font = _load_font(_bold_paths, title_size)
+    if title_font is None:
+        print("Warning: Korean font not found, using default font", file=sys.stderr)
+        title_font = ImageFont.load_default()
+
+    content_font = _load_font(_regular_paths, content_size) or ImageFont.load_default()
+    number_font = _load_font(_bold_paths, 60) or ImageFont.load_default()
     
     # Calculate total content height first
     number_height = 0
